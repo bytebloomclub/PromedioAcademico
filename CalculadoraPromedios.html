@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Promedio Académico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+        }
+        
+        main {
+            padding: 20px;
+        }
+        
+        form {
+            margin: 0 auto;
+            max-width: 500px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        input,
+        button {
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .component-form {
+            margin-bottom: 20px;
+        }
+        
+        .component-form label {
+            font-weight: bold;
+            display: block;
+            text-align: left;
+        }
+        
+        .component-form input {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+        }
+        
+        .average-result {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+        }
+        
+        .instructions {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Calculadora de Promedio Académico</h1>
+    </header>
+
+    <main>
+
+        <form id="average-form">
+            <div class="instructions">
+                <p>Para calcular el promedio, ingresa el nombre de la materia, el curso y los componentes (Ej. Exámenes, Tareas, etc.).</p>
+                <p>Cada componente debe tener un porcentaje (0-100%) y una nota (1-20).</p>
+            </div>
+
+            <label for="subject">Materia:</label>
+            <input type="text" id="subject" required placeholder="Ej. Matemáticas"><br>
+
+            <label for="course">Curso:</label>
+            <input type="text" id="course" required placeholder="Ej. 1er Semestre"><br>
+
+            <h3>Agregar Componentes (Ej. Exámenes, Tareas, etc.)</h3>
+            <div class="component-form">
+                <!-- Descripción del componente -->
+                <label for="component">Descripción del Componente (Ej. Exámenes):</label>
+                <input type="text" id="component" placeholder="Ej. Exámenes" required><br>
+
+                <!-- Porcentaje -->
+                <label for="percentage">Porcentaje del Componente (0-100%):</label>
+                <input type="number" id="percentage" min="0" max="100" placeholder="Porcentaje" required><br>
+
+                <!-- Nota -->
+                <label for="grade">Nota (1-20):</label>
+                <input type="number" id="grade" min="1" max="20" step="0.01" placeholder="Nota (1-20)" required><br>
+
+                <button type="button" onclick="addComponent()">Agregar Componente</button>
+            </div>
+
+            <h3>Componentes Agregados</h3>
+            <ul id="components-list"></ul>
+
+        </form>
+
+        <h3>Promedio: <span id="average" class="average-result">0</span></h3>
+
+    </main>
+
+    <script>
+        const components = [];
+        let subject = '';
+        let course = '';
+
+        document.getElementById("average-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            // Obtener la materia y curso
+            subject = document.getElementById("subject").value;
+            course = document.getElementById("course").value;
+
+            if (components.length === 0) {
+                alert("Por favor, agrega al menos un componente.");
+                return;
+            }
+
+            updateAverage();
+        });
+
+        function addComponent() {
+            const component = document.getElementById("component").value;
+            const percentage = parseFloat(document.getElementById("percentage").value);
+            const grade = parseFloat(document.getElementById("grade").value);
+
+            // Validación de entradas
+            if (!component || isNaN(percentage) || percentage <= 0 || percentage > 100 || isNaN(grade) || grade < 1 || grade > 20) {
+                alert("Por favor ingrese datos válidos para el componente.");
+                return;
+            }
+
+            // Agregar el componente a la lista
+            components.push({
+                component,
+                percentage,
+                grade
+            });
+
+            // Limpiar los campos de componente
+            document.getElementById("component").value = '';
+            document.getElementById("percentage").value = '';
+            document.getElementById("grade").value = '';
+
+            updateComponentsList();
+            autoCalculateAverage();
+        }
+
+        function updateComponentsList() {
+            const list = document.getElementById("components-list");
+            list.innerHTML = "";
+            components.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = `${item.component}: ${item.grade} (Peso: ${item.percentage}%)`;
+                list.appendChild(li);
+            });
+        }
+
+        function autoCalculateAverage() {
+            let totalPercentage = 0;
+            let weightedSum = 0;
+
+            components.forEach(item => {
+                totalPercentage += item.percentage;
+                weightedSum += item.grade * (item.percentage / 100);
+            });
+
+            // Si los porcentajes suman 100%, calculamos automáticamente el promedio
+            if (totalPercentage === 100) {
+                const average = weightedSum;
+                document.getElementById("average").textContent = average.toFixed(2);
+            } else {
+                // Si no suman 100%, no calculamos el promedio
+                document.getElementById("average").textContent = "Incompleto";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
